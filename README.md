@@ -41,4 +41,10 @@ http://127.0.0.1:5000/index
 ```
 ---
 > demo screen
-![sd]()
+![](demo/stn1.png)
+![](demo/stn2.png)
+![](demo/stn3.png)
+![](demo/stn4.png)
+![](demo/stn5.png)
+![](demo/stn6.png)
+![](demo/stn7.png)
