@@ -3,7 +3,7 @@
 
 Flask web-panel (site) 
 ---
-> demo youtube video.
+> demo youtube video
 ```
 https://youtu.be/BI1KexO-t8U
 ```
