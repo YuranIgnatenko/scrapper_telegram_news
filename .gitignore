@@ -1,0 +1,5 @@
+# Ignore list
+config.json
+test.json
+newSessionStatus.session
+app.log
