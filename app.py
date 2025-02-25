@@ -29,7 +29,7 @@ class WebApp():
 		self.conf = conf
 		self.ctrl = Service()
 		self.logger = logger
-		self.collection_page_blog = models.PageModelLastDialog(self.conf.get("db_file"))
+		self.collection_page_blog = models.PageModelLastDialog(self.conf.get("bd_file"))
 		self.set_routes()
 
 	def launch(self) -> None:
@@ -150,7 +150,6 @@ class WebApp():
 
 def main():
 	if len(sys.argv)>1:
-		print("++++", sys.argv)
 		arg_namefile_config = sys.argv[1]
 		conf = config.Config(sys.argv[1])
 		log = logger.Logger(conf.get("log_file"))
@@ -159,6 +158,5 @@ def main():
 	else:
 		print("enter setup-params for file")
 		return
-
 
 main()
