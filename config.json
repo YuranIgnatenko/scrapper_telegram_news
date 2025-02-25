@@ -2,5 +2,6 @@
 	"api_hash":"e4fa500de7caf508c7fd24c340b813fe",
 	"api_id":"908250",
 	"delay_sec":1,
-	"log_file":"app.log"
+	"log_file":"app.log",
+	"db_file":"test.json"
 }
