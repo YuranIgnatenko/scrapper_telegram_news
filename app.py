@@ -92,7 +92,6 @@ class WebApp():
 			di3 = di[2]
 			di4 = di[3]
 			di5 = di[4]
-			# print(di1)
 			return render_template('index.html',
 			date_now = get_date_now(),
 
