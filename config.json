@@ -3,5 +3,8 @@
 	"api_id":"908250",
 	"delay_sec":1,
 	"log_file":"app.log",
-	"db_file":"test.json"
+	"bd_file":"test.json",
+	"session_file":"newSessionStatus",
+	"path_image_cache":"static/media_cache/",
+	"ext_image_file":".jpg"
 }
