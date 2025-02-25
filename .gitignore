@@ -2,5 +2,6 @@
 config.json
 test.json
 newSessionStatus.session
+newSessionStatus.session-journal
 app.log
 __pycache__/

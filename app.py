@@ -15,7 +15,7 @@ def get_date_now():
 
 class Service():
 	def __init__(self):
-		pass 
+		 pass 
 	def bash(self, line):
 		os.system('ls')
 	def read_list_dialogs(self):
