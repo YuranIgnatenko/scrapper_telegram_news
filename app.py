@@ -1,46 +1,34 @@
 from flask import jsonify, request, render_template, Flask, url_for
-import threading
-import queue
 
-import config, logger
-import models, asyncio, os
+import config, logger, models, service
+
 import datetime
 import sys
 
-def visit_pref(endpoint):
+def build_visit_href(endpoint:str) -> str:
 	return f"visit http://127.0.0.1:5000/{endpoint}/index"
 
-def get_date_now():
-	return f"  {datetime.datetime.now().date()}"
-
-class Service():
-	def __init__(self):
-		 pass 
-	def bash(self, line):
-		os.system('ls')
-	def read_list_dialogs(self):
-		bash("python service_dialogs.py > service_dialogs.txt")
-
-
+def get_date_now() -> str:
+	return f"   {datetime.datetime.now().date()}"
 
 class WebApp():
-	def __init__(self, conf:config.Config, logger:logger.Logger) -> None:
+	def __init__(self, conf:config.Config, log:logger.Logger) -> None:
 		self.app = Flask(__name__)
 		self.conf = conf
-		self.ctrl = Service()
-		self.logger = logger
+		self.log = log
+		self.ctrl = service.ServiceScrapperDialogs(self.conf,self.log)
 		self.collection_page_blog = models.PageModelLastDialog(self.conf.get("bd_file"))
 		self.set_routes()
 
 	def launch(self) -> None:
 		self.app.run(debug=False)
 
-	def set_routes(self):
+	def set_routes(self) -> str:
 		dtb = models.DataTemplateBlog()
 
 		@self.app.route('/blog/prev')
 		def blog_prev():
-			self.logger.add(visit_pref("blog/prev"))
+			self.log.add(build_visit_href("blog/prev"))
 			self.collection_page_blog.now_page -= 1
 			collect = self.collection_page_blog.get_page()
 			return render_template(
@@ -53,7 +41,7 @@ class WebApp():
 
 		@self.app.route('/blog/next')
 		def blog_nex():
-			self.logger.add(visit_pref("blog/next"))
+			self.log.add(build_visit_href("blog/next"))
 			self.collection_page_blog.now_page += 1
 			collect = self.collection_page_blog.get_page()
 			return render_template(
@@ -65,7 +53,7 @@ class WebApp():
 				
 		@self.app.route('/blog')
 		async def blog():
-			self.logger.add(visit_pref("blog/"))
+			self.log.add(build_visit_href("blog/"))
 			collect = self.collection_page_blog.get_page()
 			return render_template(
 				'blog.html', 
@@ -77,7 +65,7 @@ class WebApp():
 		@self.app.route('/single')
 		def single():
 			id = randint(0,5)
-			self.logger.add(visit_pref("single/"+id))
+			self.log.add(build_visit_href("single/"+id))
 			collect_single = self.collection_page_blog.get_obj_from_id(id)
 			collect_trend = self.collection_page_blog.get_random_collect()
 			return render_template('single.html', 
@@ -87,7 +75,7 @@ class WebApp():
 
 		@self.app.route('/single/<id>')
 		def single_name(id):
-			self.logger.add(visit_pref("single/"+id))
+			self.log.add(build_visit_href("single/"+id))
 			collect_single = self.collection_page_blog.get_obj_from_id(id)
 			collect_trend = self.collection_page_blog.get_random_collect()
 			return render_template('single.html', 
@@ -97,7 +85,7 @@ class WebApp():
 
 		@self.app.route('/index')
 		def index():
-			self.logger.add(visit_pref("index"))
+			self.log.add(build_visit_href("index"))
 			di = self.collection_page_blog.get_random_collect(5)
 			di1 = di[0]
 			di2 = di[1]
@@ -140,13 +128,9 @@ class WebApp():
 
 		@self.app.route('/Contact_us')
 		def Contact_us():
-			self.logger.add(visit_pref("Contact_us"))
+			self.log.add(build_visit_href("Contact_us"))
 			return render_template('Contact_us.html',
 			date_now = get_date_now())
-
-
-		
-
 
 def main():
 	if len(sys.argv)>1:
