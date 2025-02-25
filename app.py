@@ -2,7 +2,7 @@ from flask import jsonify, request, render_template, Flask, url_for
 import threading
 import queue
 
-import service_dialogs as tua
+import config, logger
 import models, asyncio, os
 import datetime
 
@@ -146,8 +146,8 @@ class WebApp():
 
 
 		
-conf = tua.Config()
-logger = tua.Logger(conf.data["log_file"])
+conf = config.Config()
+logger = logger.Logger(conf.data["log_file"])
 # ctrl = tua.ControlAPI(conf.data["api_hash"], conf.data["api_id"], logger)
 webapp = WebApp(conf, logger, "test.json")
 
