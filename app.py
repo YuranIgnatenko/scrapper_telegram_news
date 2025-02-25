@@ -5,7 +5,7 @@ import queue
 import config, logger
 import models, asyncio, os
 import datetime
-
+import sys
 
 def visit_pref(endpoint):
 	return f"visit http://127.0.0.1:5000/{endpoint}/index"
@@ -24,15 +24,15 @@ class Service():
 
 
 class WebApp():
-	def __init__(self,conf, logger, jsonfile):
+	def __init__(self, conf:config.Config, logger:logger.Logger) -> None:
 		self.app = Flask(__name__)
 		self.conf = conf
 		self.ctrl = Service()
 		self.logger = logger
-		self.collection_page_blog = models.PageModelLastDialog(jsonfile)
+		self.collection_page_blog = models.PageModelLastDialog(self.conf.get("db_file"))
 		self.set_routes()
 
-	def launch(self):
+	def launch(self) -> None:
 		self.app.run(debug=False)
 
 	def set_routes(self):
@@ -146,12 +146,19 @@ class WebApp():
 
 
 		
-conf = config.Config()
-logger = logger.Logger(conf.data["log_file"])
-# ctrl = tua.ControlAPI(conf.data["api_hash"], conf.data["api_id"], logger)
-webapp = WebApp(conf, logger, "test.json")
+
 
 def main():
-	webapp.launch()
+	if len(sys.argv)>1:
+		print("++++", sys.argv)
+		arg_namefile_config = sys.argv[1]
+		conf = config.Config(sys.argv[1])
+		log = logger.Logger(conf.get("log_file"))
+		webapp = WebApp(conf, log)
+		webapp.launch()
+	else:
+		print("enter setup-params for file")
+		return
+
 
 main()

@@ -1,18 +1,19 @@
-
 import os
 import time
 
 class Logger():
-	def __init__(self, filelog:str):
-		self.namefile = filelog
-		self.check_file()
-		self.add("created logger")
+	def __init__(self, namefile:str) -> None:
+		self.namefile = namefile
+		self.connect_file()
 
-	def check_file(self):
-		if os.path.isfile(self.namefile) == False:
+	def is_exists_file(self) -> bool:
+		return os.path.isfile(self.namefile)
+
+	def connect_file(self) -> None:
+		if self.is_exists_file == False:
 			with open(self.namefile, "w+") as file:
 				file.read() 
 	
-	def add(self, line):
+	def add(self, line:any) -> None:
 		with open(self.namefile, "a") as file:
 			file.write(f"{time.asctime()} [{line}]\n")

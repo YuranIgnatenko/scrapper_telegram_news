@@ -2,12 +2,12 @@ import json
 from random import randint
 
 class DataTemplateBlog():
-	def __init__(self):
+	def __init__(self) -> None:
 		self.head_text = "STN. Scrapper Telegram News"
 
 
 class ModelLastDialog():
-	def __init__(self, title, id, message, date_create, name, image, image_bytes = 0):
+	def __init__(self, title, id, message, date_create, name, image, image_bytes):
 		self.title = title
 		self.message = message
 		self.preview_text = 0
