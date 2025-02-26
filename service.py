@@ -7,28 +7,31 @@ import json
 
 import config
 import logger
+import bd
 
 class ServiceScrapperDialogs():
-	def __init__(self, conf:config.Config, log:logger.Logger) -> None:
+	def __init__(self, conf:config.Config, log:logger.Logger, bd:bd.ControlBD) -> None:
 		self.conf = conf
 		self.log = log
+		self.ctrlbd = bd
 		self.namefile_bd = self.conf.get("bd_file")
 		self.path_image_cache = self.conf.get("path_image_cache")
 		self.ext_image_file = self.conf.get("ext_image_file")
+		self.limit_scrap_dialogs = int(self.conf.get("limit_scrap_dialogs"))
 
-	def save_to_json(self, array_dialogs:list[telethon.types.Dialog]) -> None:
-		self.ping_file_bd()
+	def save_in_bd(self, array_dialogs:list[telethon.types.Dialog]) -> None:
+		self.ctrlbd.ping_connection_bd()
 
 		temp_array_dialogs_json = []	
 		
 		for dialog in array_dialogs:
-			temp_dict_json_element = self.new_dict_json_element(dialog)
+			temp_dict_json_element = self.dialog_to_json_dict(dialog)
 			temp_array_dialogs_json.append(temp_dict_json_element)
 
-		with open(self.namefile_bd, 'w', encoding='utf-8') as file:
-			json.dump(temp_array_dialogs_json, file, ensure_ascii=False, indent=4)
+		self.ctrlbd.json_dump_array_dialogs(temp_array_dialogs_json)
 
-	def new_dict_json_element(self, dialog:telethon.types.Dialog) -> dict:
+
+	def dialog_to_json_dict(self, dialog:telethon.types.Dialog) -> dict:
 		temp_date_create = dialog.date_create.replace(" ","-")
 		temp_dict_json_element = {
 			"id": dialog.id,
@@ -39,14 +42,6 @@ class ServiceScrapperDialogs():
 		}
 		return temp_dict_json_element
 
-	def ping_file_bd(self) -> None:
-		if self.is_exists_file() == False:
-			with open(self.namefile_bd, "w") as bd:
-				bd.close()
-
-	def is_exists_file(self) -> bool:
-		return os.path.isfile(self.namefile_bd)
-
 	def create_telegram_client(self) -> None:
 		self.client = TelegramClient(
 			self.conf.get("session_file"), 
@@ -54,54 +49,51 @@ class ServiceScrapperDialogs():
 			self.conf.get("api_hash"))
 		self.client.connect()
 
-	def update_data_json(self) -> None:
-		self.create_telegram_client()
+	def get_array_channel_dialogs(self) -> list[telethon.types.Dialog]:
+		temp_array_model_dialogs = []
 
-		array_channel_dialogs = []
-		array_model_dialogs = []
-
-		for dialog in self.client.iter_dialogs():
+		for dialog in self.client.iter_dialogs(limit=self.limit_scrap_dialogs):
 			if dialog.is_group or dialog.is_channel:
-				array_channel_dialogs.append(dialog)
+				temp_array_model_dialogs.append(dialog)
 
-		self.remove_cache_image()
+		return temp_array_model_dialogs
+
+	def launch(self) -> None:
+		self.ctrlbd.remove_cache_image()
+
+		array_model_dialogs = []
+		array_channel_dialogs =  self.get_array_channel_dialogs()
 
 		for dialog in array_channel_dialogs:
 			self.try_download_image(dialog)
+			array_model_dialogs.append(self.create_model_dialog(dialog))
+			print("count", len(array_model_dialogs), len(array_channel_dialogs))
 
-			array_model_dialogs.append(
-				models.ModelLastDialog(
-					dialog.title,
-					dialog.id, 
-					dialog.message.message,
-					dialog.message.date,
-					dialog.name,
-					self.build_new_name_image(id),
-					self.build_new_name_image(id),
-					))
-			print("count", len(array_channel_dialogs), len(array_model_dialogs))
-
-		return array_model_dialogs
+		self.save_in_bd(array_model_dialogs)
+		
+	def create_model_dialog(self, dialog:telethon.types.Dialog) -> models.ModelDialog:
+		temp_dialog = models.ModelDialog(
+			dialog.title,
+			dialog.id, 
+			dialog.message.message,
+			dialog.message.date,
+			dialog.name,
+			self.build_new_name_image(dialog.id),
+			self.build_new_name_image(dialog.id),
+			)
+		return temp_dialog
 
 	def try_download_image(self, dialog:telethon.types.Dialog) -> None:
 			temp_name_image = self.save_image(dialog)
 			if temp_name_image is None: return
-			self.rename_image(temp_name_image, dialog.id)
+			self.ctrlbd.rename_image(temp_name_image, self.build_new_name_image(dialog.id))
 
 	def save_image(self, dialog:telethon.types.Dialog) -> str:
-		try:temp_name_image = self.client.download_media(dialog.message.photo)
-		except Exception as e: print(e)
+		try:temp_name_image = self.client.download_media(dialog.message.photo, f"{self.path_image_cache}{dialog.id}{self.ext_image_file}")
+		except Exception as e: 
+			print(e)
+			return "news_default.jpg"
 		return temp_name_image
-
-	def rename_image(self, name_image:str, id:int) -> None:
-		try:os.rename(name_image, self.build_new_name_image(id))
-		except Exception as e: print(e)
-
-	def remove_cache_image(self) -> None:
-		try:os.remove(self.path_image_cache)
-		except Exception as e: print(e)
-		try:os.makedirs(self.path_image_cache)
-		except Exception as e: print(e)
 
 	def build_new_name_image(self, id:int) -> str:
 		return f"{self.path_image_cache}{id}{self.ext_image_file}"
@@ -109,10 +101,14 @@ class ServiceScrapperDialogs():
 def main():
 	if len(sys.argv)>1:
 		arg_namefile_config = sys.argv[1]
-		conf = config.Config(sys.argv[1])
-		log = logger.Logger(conf.get("log_file"))
-		ssd = ServiceScrapperDialogs(conf, log)
-		ssd.update_data_json()
+
+		conf = config.Config(arg_namefile_config)
+		log = logger.Logger(conf)
+		ctrlbd = bd.ControlBD(conf)
+		ssd = ServiceScrapperDialogs(conf, log, ctrlbd)
+
+		ssd.create_telegram_client()
+		ssd.launch()
 	else:
 		print("enter setup-params for file")
 		return

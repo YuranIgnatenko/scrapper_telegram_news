@@ -6,8 +6,8 @@ class DataTemplateBlog():
 		self.head_text = "STN. Scrapper Telegram News"
 
 
-class ModelLastDialog():
-	def __init__(self, title, id, message, date_create, name, image, image_bytes):
+class ModelDialog():
+	def __init__(self, title, id, message, date_create, name, image, image_bytes) -> None:
 		self.title = title
 		self.message = message
 		self.preview_text = 0
@@ -20,11 +20,13 @@ class ModelLastDialog():
 		self.forward = 0
 		self.source = 0
 
-class PageModelLastDialog():
-	def __init__(self,namefile_json):
+class PageModelDialog():
+	def __init__(self,namefile_json:str, max_items_in_page:int) -> None:
 		with open(namefile_json, 'r', encoding='utf-8') as file:
 			json_data = file.read()
+
 		self.data = json.loads(json_data)
+
 		for dt in self.data:
 			try:
 				dt['desc'] = dt["message"][:30]
@@ -33,25 +35,22 @@ class PageModelLastDialog():
 				continue
 		list_model_last_dialog = self.data
 		self.lmld = list_model_last_dialog
-		self.max_in_page = 4
-		self.now_page = 0
-	def get_page(self):
+		self.max_items_in_page = max_items_in_page
+		self.now_index_page = 0
+
+	def get_list_items_dialog(self) -> list[ModelDialog]:
 		try:
-			return self.lmld[self.now_page*self.max_in_page:self.now_page*self.max_in_page+self.max_in_page]
+			return self.lmld[self.now_index_page*self.max_items_in_page:self.now_index_page*self.max_items_in_page+self.max_items_in_page]
 		except Exception as e:
 			return self.lmld
-	def get_obj_from_id(self, id):
+
+	def get_item_dialog(self, id:int) -> ModelDialog:
 		for elem in self.lmld:
 			if str(elem['id']) == str(id):
 				return elem
 			
-	def get_random_collect(self, count=4):
+	def get_list_items_dialog_random(self, count:int) -> list[ModelDialog]:
 		temp_collect = []
 		for i in range(count):
 			temp_collect.append(self.lmld[randint(0,len(self.lmld)-1)])
 		return temp_collect
-			
-
-class ModelSingle():
-	def __init__(self,data):
-		self.data = data

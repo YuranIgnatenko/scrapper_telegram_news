@@ -1,9 +1,10 @@
 import os
 import time
+import config
 
 class Logger():
-	def __init__(self, namefile:str) -> None:
-		self.namefile = namefile
+	def __init__(self, conf:config.Config) -> None:
+		self.namefile = conf.get("log_file")
 		self.connect_file()
 
 	def is_exists_file(self) -> bool:
@@ -15,5 +16,9 @@ class Logger():
 				file.read() 
 	
 	def add(self, line:any) -> None:
-		with open(self.namefile, "a") as file:
-			file.write(f"{time.asctime()} [{line}]\n")
+		try:
+			with open(self.namefile, "a") as file:
+				file.write(f"{time.asctime()} [{line}]\n")
+		except:
+			with open(self.namefile, "a") as file:
+				file.write(f"{time.asctime()} [indef move]\n")
