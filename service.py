@@ -9,6 +9,9 @@ import config
 import logger
 import bd
 
+import shutil
+
+
 class ServiceScrapperDialogs():
 	def __init__(self, conf:config.Config, log:logger.Logger, bd:bd.ControlBD) -> None:
 		self.conf = conf
@@ -65,34 +68,40 @@ class ServiceScrapperDialogs():
 		array_channel_dialogs =  self.get_array_channel_dialogs()
 
 		for dialog in array_channel_dialogs:
-			self.try_download_image(dialog)
-			array_model_dialogs.append(self.create_model_dialog(dialog))
+			temp_name_image = self.try_download_image(dialog)
+			array_model_dialogs.append(self.create_model_dialog(dialog, temp_name_image))
 			print("count", len(array_model_dialogs), len(array_channel_dialogs))
 
 		self.save_in_bd(array_model_dialogs)
 		
-	def create_model_dialog(self, dialog:telethon.types.Dialog) -> models.ModelDialog:
+	def create_model_dialog(self, dialog:telethon.types.Dialog, image_name:str) -> models.ModelDialog:
 		temp_dialog = models.ModelDialog(
 			dialog.title,
 			dialog.id, 
 			dialog.message.message,
 			dialog.message.date,
 			dialog.name,
-			self.build_new_name_image(dialog.id),
-			self.build_new_name_image(dialog.id),
+			image_name,
+			image_name,
 			)
 		return temp_dialog
 
-	def try_download_image(self, dialog:telethon.types.Dialog) -> None:
+	def try_download_image(self, dialog:telethon.types.Dialog) -> str:
 			temp_name_image = self.save_image(dialog)
-			if temp_name_image is None: return
+			if temp_name_image is None: 
+				temp_name_image = self.conf.get("news_default_image")
+				shutil.copy(temp_name_image, self.build_new_name_image(dialog.id))
+				return self.build_new_name_image(dialog.id)
 			self.ctrlbd.rename_image(temp_name_image, self.build_new_name_image(dialog.id))
+			return temp_name_image
 
 	def save_image(self, dialog:telethon.types.Dialog) -> str:
-		try:temp_name_image = self.client.download_media(dialog.message.photo, f"{self.path_image_cache}{dialog.id}{self.ext_image_file}")
+		try:
+			temp_name_image = self.client.download_media(
+				dialog.message.photo, f"{self.path_image_cache}{dialog.id}{self.ext_image_file}")
+			return temp_name_image
 		except Exception as e: 
-			print(e)
-			return "news_default.jpg"
+			temp_name_image = self.conf.get("news_default_image")
 		return temp_name_image
 
 	def build_new_name_image(self, id:int) -> str:

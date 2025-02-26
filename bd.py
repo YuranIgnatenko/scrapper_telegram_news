@@ -32,4 +32,8 @@ class ControlBD():
 		except Exception as e: print(e)
 		try:os.makedirs(self.path_image_cache)
 		except Exception as e: print(e)
+		try:os.remove(self.namefile_bd)
+		except Exception as e: print(e)
+		try:open(self.namefile_bd, "w").close()
+		except Exception as e: print(e)
 	
